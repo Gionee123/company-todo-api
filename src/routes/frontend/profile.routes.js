@@ -39,9 +39,5 @@ module.exports = app => {
     // ✅ Apply all under this base route
     app.use('/api/frontend/users', route);
 
-    console.log('✅ Frontend user routes registered successfully');
-    console.log('📍 Available routes:');
-    console.log('   - POST /api/frontend/users/create');
-    console.log('   - POST /api/frontend/users/view');
-    console.log('   - POST /api/frontend/users/details/:id');
+
 };
