@@ -2,20 +2,28 @@ const express = require("express")
 const cors = require("cors")
 const mongoose = require("mongoose")
 require('dotenv').config(); // .env फाइल को load करने के लिए
-const adminModel = require('./src/models/AdminModel');
 
 const server = express()
 
-// Enhanced CORS configuration
-server.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Allow Next.js frontend
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}))
 
-server.use(express.json())
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'https://ipage-api.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'https://your-frontend-domain.com' // Add your frontend domain if different
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+server.use(cors(corsOptions));
+
 server.use(express.urlencoded({ extended: true }))
+server.use(express.json())
+server.use('/uploads/Images', express.static('uploads/Images'));
 
 
 server.get("/", (request, response) => {
@@ -23,14 +31,25 @@ server.get("/", (request, response) => {
 })
 
 // backend url
-require("./src/routes/backend/UserAdmin.routes")(server)
-require('./src/routes/backend/Admin.routes')(server);
-
 
 
 
 // fronted url
-require("./src/routes/frontend/UserAuth.routes")(server)
+try {
+  require("./src/routes/frontend/profile.routes")(server);
+  console.log('✅ Frontend routes loaded successfully');
+} catch (error) {
+  console.error('❌ Error loading frontend routes:', error);
+}
+
+// Add a test route to verify the API is working
+server.get("/api/test", (request, response) => {
+  response.json({
+    status: true,
+    message: "API is working correctly",
+    timestamp: new Date().toISOString()
+  });
+});
 
 
 server.get("*", (request, response) => {
@@ -44,12 +63,8 @@ const MONGO_URI = 'mongodb+srv://yogeshsainijpr123:Gionee123@cluster0.nbzuobn.mo
 
 
 mongoose.connect(MONGO_URI)
-  .then(async () => {
-    const checkAdmin = await adminModel.find();
-    if (checkAdmin.length == 0) {
-      let admin = await adminModel({ adminName: 'admin', adminPassword: 'admin123' });
-      await admin.save();
-    }
+  .then(() => {
+
     console.log('✅ Local Database Connected Successfully');
 
     const PORT = 5000;
